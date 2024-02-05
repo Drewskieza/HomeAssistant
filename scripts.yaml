@@ -1,0 +1,281 @@
+shutdown_tash:
+  alias: 'Shutdown: Tash'
+  sequence:
+  - service: shell_command.tash_shutdown
+reboot_nut1:
+  alias: Reboot NUT1
+  sequence:
+  - service: shell_command.nut1_reboot
+  mode: single
+drew_ups_beeper:
+  alias: Drew-UPS Beeper
+  sequence:
+  - service: shell_command.drew_ups_beeper
+  mode: single
+apple_tv_sleep:
+  alias: Make the Apple TV sleep
+  sequence:
+  - service: remote.send_command
+    data:
+      delay_secs: 1
+      command:
+      - home_hold
+      - select
+    target:
+      entity_id: remote.taeyah_tv
+  - service: media_player.turn_off
+    target:
+      entity_id: media_player.taeyah_tv
+  mode: single
+ha_restated:
+  alias: HA Restarted
+  sequence:
+  - service: shell_command.ha_start
+  mode: single
+turn_off_taeyah_tv:
+  alias: Turn Off Taeyah TV
+  sequence:
+  - type: turn_off
+    device_id: eeb1e0b419c0ea4f34171155b6dc8c45
+    entity_id: remote.taeyah_tv
+    domain: remote
+  mode: single
+turn_on_taeyah_tv:
+  alias: Turn On Taeyah TV
+  sequence:
+  - type: turn_on
+    device_id: eeb1e0b419c0ea4f34171155b6dc8c45
+    entity_id: remote.taeyah_tv
+    domain: remote
+  mode: single
+nut_sensors:
+  alias: Nut Sensors
+  sequence:
+  - service: shell_command.nut1_sensor
+  mode: single
+  icon: phu:motion-sensor
+drew2_ups_beeper:
+  alias: Drew2-UPS Beeper
+  sequence:
+  - service: shell_command.drew2_ups_beeper
+    data: {}
+  mode: single
+fan_off:
+  alias: Turn a fan off
+  fields:
+    fan:
+      description: The fan to turn off
+      example: office_tower_fan
+  sequence:
+  - service: input_boolean.toggle
+    target:
+      entity_id: input_boolean.{{ fan }}_state
+  - service: input_number.set_value
+    data:
+      value: 0
+    target:
+      entity_id: input_number.{{ fan }}_speed
+  mode: single
+  icon: mdi:fan-off
+fan_on:
+  alias: Turn a fan on
+  fields:
+    fan:
+      description: The fan to turn on
+      example: office_tower_fan
+  sequence:
+  - service: input_boolean.toggle
+    target:
+      entity_id: input_boolean.{{ fan }}_state
+  - service: input_number.set_value
+    data:
+      value: 1
+    target:
+      entity_id: input_number.{{ fan }}_speed
+  mode: single
+  icon: mdi:fan-speed-1
+fan_set_speed:
+  alias: Set the speed of a fan
+  icon: mdi:fan
+  fields:
+    fan:
+      description: The fan to set the speed of
+      example: office_tower_fan
+    speed:
+      description: The speed of the fan
+      example: '1'
+  sequence:
+  - service: remote.send_command
+    data:
+      device: '{{ fan }}'
+      command: speed
+    target:
+      entity_id: remote.universal_remote
+  - if:
+    - condition: template
+      value_template: '{{ (speed | round (0, ''floor'')) == 0 }}'
+    then:
+    - service: input_boolean.turn_off
+      data:
+        entity_id: input_boolean.{{ fan }}_state
+    else:
+    - service: input_boolean.turn_on
+      data:
+        entity_id: input_boolean.{{ fan }}_state
+  - service: input_number.set_value
+    data:
+      entity_id: input_number.{{ fan }}_speed
+      value: '{{ speed }}'
+  mode: single
+fan_set_speed_state:
+  alias: Set the tracking value for the fan speed
+  icon: mdi:fan
+  fields:
+    fan:
+      description: The fan to set the speed of
+      example: office_tower_fan
+    speed:
+      description: The speed of the fan
+      example: '1'
+  sequence:
+    service: input_number.set_value
+    data:
+      entity_id: input_number.{{ fan }}_speed
+      value: '{{ (speed / 100) * 6 | round(0, ''ceil'') }}'
+fan_set_osc:
+  alias: Set Osc on fan
+  icon: mdi:fan
+  fields:
+    fan:
+      description: The fan to set OSC of
+      example: office_tower_fan
+  sequence:
+    service: input_boolean.toggle
+    data:
+      entity_id: input_boolean.{{ fan }}_osc
+'1687793021998':
+  alias: 'TTS NOTIFICATION: blank clear'
+  sequence:
+  - service: input_text.set_value
+    data:
+      value: ''
+    entity_id: input_text.tts_message
+  - service: input_select.select_option
+    data:
+      option: All Speakers
+    entity_id: input_select.tts_media_players
+  - service: input_select.select_option
+    data:
+      option: '0.4'
+    target:
+      entity_id: input_select.tts_volume
+  - service: input_text.set_value
+    data:
+      value: ''
+    entity_id: input_text.tts_media_player_name
+  - service: input_select.select_option
+    data:
+      option: English
+    entity_id: input_select.tts_language
+  mode: single
+'1687793185696':
+  alias: 'TTS NOTIFICATION: send the TTS message'
+  sequence:
+  - service: scene.create
+    data:
+      scene_id: speakers_before
+      snapshot_entities:
+      - media_player.googlehome5943
+      - media_player.white_speaker
+  - service: media_player.volume_set
+    data:
+      entity_id: '{{ states("input_text.tts_media_player_name" ) }}'
+      volume_level: '{{ states("input_select.tts_volume") }}'
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_select.tts_language
+        state: Afrikaans
+      sequence:
+      - service: tts.google_translate_say
+        data:
+          cache: false
+          entity_id: '{{ states("input_text.tts_media_player_name" ) }}'
+          message: '{{ states("input_text.tts_message") }}'
+    - conditions:
+      - condition: state
+        entity_id: input_select.tts_language
+        state: English
+      sequence:
+      - service: tts.cloud_say
+        data:
+          entity_id: '{{ states("input_text.tts_media_player_name" ) }}'
+          message: '{{ states("input_text.tts_message") }}'
+          language: en-US
+          options:
+            gender: female
+    default: []
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 10
+      milliseconds: 0
+  - service: scene.turn_on
+    data: {}
+    target:
+      entity_id: scene.speakers_before
+  mode: single
+'1687795330965':
+  alias: Play Radio on speakers
+  sequence:
+  - service: media_player.volume_set
+    data:
+      entity_id: ' {% if is_state("input_select.googlehome_radio", "Office speaker")
+        %} media_player.googlehome5943 {% elif is_state("input_select.googlehome_radio",
+        "All Google Speakers") %} media_player.google_speakes_all {% endif %} '
+      volume_level: '{{ states("input_select.tts_volume") }}'
+  - service: media_player.play_media
+    data_template:
+      entity_id: '  {% if is_state("input_select.googlehome_radio", "Office speaker")
+        %} media_player.googlehome5943  {% elif is_state("input_select.googlehome_radio",
+        "Landing Speaker") %} media_player.white_speaker  {% elif is_state("input_select.googlehome_radio",
+        "All Google Speakers") %} media_player.google_speakes_all {% endif %} '
+      media_content_id: ' {% if is_state("input_select.radio_station", "BBC Radio
+        1") %} http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/http-icy-mp3-a/vpid/bbc_radio_one/format/pls.pls
+        {% elif is_state("input_select.radio_station", "BBC Radio 1xtra") %} http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/http-icy-mp3-a/vpid/bbc_1xtra/format/pls.pls
+        {% elif is_state("input_select.radio_station", "BBC Radio Nottingham") %}
+        http://open.live.bbc.co.uk/mediaselector/5/select/version/2.0/mediaset/http-icy-mp3-a/vpid/bbc_radio_nottingham/format/pls.pls
+        {% elif is_state("input_select.radio_station", "KISSTORY") %} http://www.radiofeeds.co.uk/bauer.pls?station=kisstory.mp3.m3u
+        {% elif is_state("input_select.radio_station", "Kemet FM") %} http://109.169.26.139:8120/listen.pls?sid=1
+        {% elif is_state("input_select.radio_station", "Capital Xtra") %} http://icecast.thisisdax.com/CapitalXTRANationalMP3.m3u
+        {% elif is_state("input_select.radio_station", "Heart Radio") %} http://media-ice.musicradio.com/HeartUKMP3
+        {% endif %} '
+      extra:
+        thumb: "{%- if is_state(\"input_select.radio_station\", \"BBC Radio 1\") -%}\n
+          \  https://static.files.bbci.co.uk/sounds/web/sounds-web/img/sounds-apple-touch-icon.ead169771d.png\n{%-
+          elif is_state(\"input_select.radio_station\", \"BBC Radio 1xtra\")-%}\n
+          \  https://rmp.files.bbci.co.uk/rmp-shared-assets/1.4.0/img/network-logos/national/bbc_1xtra_colour.svg\n{%-
+          elif is_state(\"input_select.radio_station\", \"BBC Radio Nottingham\")
+          -%}\n   \thttps://static.files.bbci.co.uk/sounds/web/sounds-web/img/sounds-apple-touch-icon.ead169771d.png\n{%-
+          elif is_state(\"input_select.radio_station\", \"KISSTORY\") -%}\n   https://listenapi.s3.amazonaws.com/img/ConfigWebListenBarLogoImageUrl/22.png?ver=1463741191\n{%-
+          elif is_state(\"input_select.radio_station\", \"Kemet FM\") -%}\n   http://www.r101.it/favicon_7.ico?v=1561631502599\n{%-
+          elif is_state(\"input_select.radio_station\", \"Capital Xtra\") -%}\n   http://assets6.capitalxtra.com/2014/15/capital-xtra-logo-big-1397738967.png\n{%-
+          elif is_state(\"input_select.radio_station\", \"Heart Radio\") -%}\n   https://www.heart.co.uk/assets_v4r/heart/img/favicon-196x196.png\n{%-
+          endif -%}\n"
+      media_content_type: audio/mp4
+    metadata:
+      title: "{%- if is_state(\"input_select.radio_station\", \"BBC Radio 1\") -%}\n
+        \ BBC Radio 1\n{%- elif is_state(\"input_select.radio_stationt\", \"BBC Radio
+        1xtra\") -%}\n  BBC Radio 1xtra\n{%- elif is_state(\"input_select.radio_station\",
+        \"BBC Radio Nottingham\") -%}\n  BBC Radio Nottingham\n{%- elif is_state(\"input_select.radio_station\",
+        \"KISSTORY\") -%}\n  KISSTORY\n{%- elif is_state(\"input_select.radio_station\",
+        \"Kemet FM\") -%}\n  Kemet FM\n{%- elif is_state(\"input_select.radio_station\",
+        \"Capital Xtra\") -%}\n  Capital Xtra\n{%- elif is_state(\"input_select.radio_station\",
+        \"Heart Radio\") -%}\n Heart Radio\n{%- endif -%}\n"
+  mode: single
+  icon: mdi:radio

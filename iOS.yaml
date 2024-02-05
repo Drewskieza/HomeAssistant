@@ -1,0 +1,74 @@
+push:
+  categories:
+    - name: Alert
+      identifier: 'alert'
+      actions:
+        - identifier: 'DISABLE_ALERT'
+          title: 'Disable Alert'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: Alarm
+      identifier: 'alarm'
+      actions:
+        - identifier: 'SILENCE_ALARM'
+          title: 'Silence Alarm'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: BMWAlert
+      identifier: 'bmwalert'
+      actions:
+        - identifier: 'LOCK_BMW'
+          title: 'Lock BMW'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: Arm_Alarm
+      identifier: 'armalarm'
+      actions:
+        - identifier: 'ARM_ALARM'
+          title: 'Arm Alarm'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: Disarm_Alarm
+      identifier: 'disarmalarm'
+      actions:
+        - identifier: 'DISARM_ALARM'
+          title: 'Disarm Alarm'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: Unlock_Yale_Disarm_Alarm
+      identifier: 'unlockyaledisarmalarm'
+      actions:
+        - identifier: 'UNLOCK_YALE_DISARM_ALARM'
+          title: 'Disarm Alarm & Unlock Yale'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: Unlock_Yale
+      identifier: 'unlockyale'
+      actions:
+        - identifier: 'UNLOCK_YALE'
+          title: 'Unlock Yale'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: yes
+          behavior: 'default'
+    - name: Siren
+      identifier: 'siren'
+      actions:
+        - identifier: 'ACTIVATE_SIRENS'
+          title: 'Activate Sirens'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: yes
+          behavior: 'default'          

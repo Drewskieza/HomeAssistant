@@ -1,0 +1,19 @@
+uk_radio:
+   name: UK Radio
+   entities:
+      - input_select.radio_station
+      - input_select.googlehome_radio
+      - script.radio
+
+family:
+    - person.andrew_rough
+    - person.kamika_rough
+    - person.natasha_rough
+    - person.taeyah_rough
+
+parents:
+    name: Parents
+    all: true
+    entities:
+        - person.andrew_rough
+        - person.natasha_rough

@@ -1,0 +1,2071 @@
+- id: '1611247426276'
+  alias: Notify when someone enters or leaves a zone
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: person.andrew_rough, person.kamika_rough, person.natasha_rough, person.taeyah_rough
+  condition:
+  - condition: template
+    value_template: '{{ trigger.from_state.state != trigger.to_state.state }}'
+  action:
+  - service: notify.mobile_app_drewskie_iphone
+    data:
+      title: Location update {{ states.sensor.time.state }}
+      message: '{{ trigger.to_state.attributes.friendly_name }} {% if trigger.to_state.state
+        == ''not_home'' %}has left {{ trigger.from_state.state }}{% endif %}{% if
+        trigger.from_state.state == ''not_home'' %}arrived at {{ trigger.to_state.state
+        }}{% endif %}'
+  - service: tts.google_translate_say
+    entity_id: media_player.googlehome5943
+    data:
+      message: '{{ trigger.to_state.attributes.friendly_name }} {% if trigger.to_state.state
+        == ''not_home'' %}has left {{ trigger.from_state.state }}{% endif %}{% if
+        trigger.from_state.state == ''not_home'' %}arrived at {{ trigger.to_state.state
+        }}{% endif %}  '
+    enabled: false
+  mode: single
+- id: '1612897175672'
+  alias: Alarm - Send notification for activation
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - alarm_control_panel.alarmo
+    to:
+  action:
+  - service: notify.mobile_app_drewskie_iphone_iosapp
+    data:
+      title: Alarm state changed to
+      message: '{{ trigger.to_state.state}}'
+  mode: single
+- id: '1612901059532'
+  alias: Alarm - Triggered
+  description: Alarm Triggered
+  trigger:
+  - platform: time_pattern
+    seconds: /30
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.alarmo
+    state: triggered
+  action:
+  - service: notify.mobile_app_drewskie_iphone_iosapp
+    data:
+      message: 'The alarm is triggered! Cause: {{open_sensors}}'
+      title: Alarm triggered
+      data:
+        actions:
+        - action: NODISARM
+          title: Ok
+          authenbticationRequired: false
+        - action: DISARM
+          title: Disarm
+          authenbticationRequired: false
+        push:
+          sound:
+            name: default
+            critical: 1
+            volume: 1
+  - service: scene.create
+    data:
+      scene_id: before_alarm
+      snapshot_entities:
+      - media_player.googlehome5943 media_player.white_speaker
+  - service: media_player.media_stop
+    target:
+      device_id:
+      - bef3dc31c6315e9da37406e9adb96f56
+      - 2ebfc29a4d02f56fa7c6a80a865e2985
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+  - service: media_player.volume_set
+    data:
+      volume_level: 1
+    target:
+      device_id:
+      - bef3dc31c6315e9da37406e9adb96f56
+      - 2ebfc29a4d02f56fa7c6a80a865e2985
+  - service: tts.google_translate_say
+    data:
+      message: Alarm has been triggered
+      entity_id: media_player.white_speaker
+      cache: true
+  - service: tts.google_translate_say
+    data:
+      message: Alarm has been triggered
+      entity_id: media_player.googlehome5943
+      cache: true
+  - delay:
+      seconds: 6
+  - service: scene.turn_on
+    target:
+      entity_id: scene.before_alarm
+    data: {}
+  initial_state: 'on'
+  mode: parallel
+  max: 10
+- id: '1613591682951'
+  alias: Alarm - Turn on  22:00
+  description: ''
+  trigger:
+  - platform: time
+    at: '22:00:00'
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.alarmo
+    state: disarmed
+  action:
+  - service: alarmo.arm
+    data:
+      mode: custom
+      skip_delay: false
+      force: false
+      entity_id: alarm_control_panel.alarmo
+  mode: single
+- id: '1634708589596'
+  alias: Family has arrived
+  description: ''
+  trigger:
+  - platform: zone
+    entity_id: person.andrew_rough
+    zone: zone.home
+    event: enter
+  - platform: zone
+    entity_id: person.natasha_rough
+    zone: zone.home
+    event: enter
+  - platform: zone
+    entity_id: person.taeyah_rough
+    zone: zone.home
+    event: enter
+  - platform: zone
+    entity_id: person.kamika_rough
+    zone: zone.home
+    event: enter
+  - platform: state
+    entity_id: input_boolean.family_is_home
+    from: 'off'
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: input_boolean.family_is_home
+    state: 'off'
+  action:
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.family_is_home
+    data: {}
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.family_is_away
+    data: {}
+  mode: single
+- id: '1634708815794'
+  alias: Family has left
+  description: ''
+  trigger:
+  - platform: state
+    entity_id: group.family
+    from: home
+    to: not_home
+  - platform: state
+    entity_id: input_boolean.family_is_home
+    from: 'on'
+    to: 'off'
+  condition:
+  - condition: state
+    entity_id: input_boolean.family_is_home
+    state: 'on'
+  action:
+  - service: input_boolean.turn_off
+  mode: single
+- id: '1636985167958'
+  alias: Doorbell - Speaker Alert
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.front_door_ding_2
+    to: 'on'
+  - platform: state
+    entity_id:
+    - binary_sensor.front_door_ding
+    to: 'on'
+  - platform: state
+    entity_id:
+    - sensor.front_door_last_ding
+    enabled: false
+  condition:
+  - condition: time
+    after: 07:00
+    before: '18:00'
+  action:
+  - service: scene.create
+    data:
+      scene_id: before_doorbell_gh
+      snapshot_entities: media_player.googlehome5943
+    alias: Create scene GH
+    enabled: false
+  - service: scene.create
+    data:
+      scene_id: before_doorbell_ws
+      snapshot_entities: media_player.white_speaker
+    alias: Create scene WS
+    enabled: false
+  - service: media_player.turn_on
+    target:
+      device_id:
+      - bef3dc31c6315e9da37406e9adb96f56
+      - 2ebfc29a4d02f56fa7c6a80a865e2985
+    data: {}
+    enabled: false
+  - service: media_player.media_stop
+    target:
+      device_id:
+      - bef3dc31c6315e9da37406e9adb96f56
+      - 2ebfc29a4d02f56fa7c6a80a865e2985
+    data: {}
+    enabled: false
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 1
+      milliseconds: 0
+    enabled: false
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.66
+    target:
+      device_id:
+      - bef3dc31c6315e9da37406e9adb96f56
+      - 2ebfc29a4d02f56fa7c6a80a865e2985
+    enabled: false
+  - service: media_player.play_media
+    data:
+      media_content_type: audio/mp3
+      media_content_id: /media/media/doorbell-1.mp3
+    target:
+      device_id:
+      - bef3dc31c6315e9da37406e9adb96f56
+      - 2ebfc29a4d02f56fa7c6a80a865e2985
+    enabled: false
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 9
+      milliseconds: 0
+    enabled: false
+  - service: scene.turn_on
+    data: {}
+    target:
+      entity_id: scene.before_doorbell_gh
+    enabled: false
+  - service: scene.turn_on
+    data: {}
+    target:
+      entity_id: scene.before_doorbell_ws
+    enabled: false
+  - service: notify.google_assistant_sdk
+    data:
+      message: Ding Dong front door
+  mode: single
+- id: '1637000220993'
+  alias: Gate Open 5m Notification
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.dsa04_gate_contact
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: notify.perants
+    data:
+      message: Back Gate Open
+      title: Back Gate
+      data:
+        actions:
+        - action: IGNORE
+          title: Ok
+          authenbticationRequired: false
+        entity_id: camera.03cabcc9_ring_mqtt_2
+        push:
+          sound:
+            name: default
+            critical: 1
+            volume: 1
+  mode: single
+- id: '1637002870094'
+  alias: Alarm - Disarm Alarm from Mobile App
+  description: ''
+  trigger:
+  - platform: event
+    event_type: mobile_app_notification_action
+    event_data:
+      action: DISARM
+  condition: []
+  action:
+  - service: alarmo.disarm
+    data:
+      entity_id: alarm_control_panel.alarmo
+      code: '0103'
+  mode: single
+- id: '1637647783453'
+  alias: Doorbell - Notification Alert
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.front_door_ding_2
+    to: 'on'
+  - platform: state
+    entity_id:
+    - binary_sensor.front_door_ding
+    to: 'on'
+  condition: []
+  action:
+  - service: notify.mobile_app_drewskie_iphone_iosapp
+    data:
+      message: Ding Dong
+      title: Front Door
+      data:
+        actions:
+        - action: IGNORE
+          title: Ok
+          authenbticationRequired: false
+        entity_id: camera.03cabcc9_ring_mqtt_2
+  mode: single
+- id: '1638802627419'
+  alias: LED - Christmas Sunset
+  description: ''
+  trigger:
+  - platform: time_pattern
+    minutes: '5'
+  - platform: sun
+    event: sunset
+    offset: '-59'
+  condition:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    after_offset: '-60'
+  - condition: time
+    before: '22:00:00'
+    weekday:
+    - sat
+    - fri
+    - thu
+    - wed
+    - tue
+    - mon
+    - sun
+    after: '11:00:00'
+  - condition: template
+    value_template: '{{ now().month == 12 }}'
+  action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.christmas_lights
+    data: {}
+  - service: light.turn_on
+    target:
+      entity_id:
+      - light.wled01
+    data: {}
+  - service: select.select_option
+    data:
+      option: Christmas
+    target:
+      entity_id:
+      - select.wled01_playlist
+  - type: turn_on
+    device_id: ee48c3a3406c2f29ddebd695153fb383
+    entity_id: cc0074449809b56c103c126a2683c1e8
+    domain: switch
+  - wait_for_trigger:
+    - platform: time
+      at: '22:00:00'
+    continue_on_timeout: false
+  - service: light.turn_off
+    data:
+      effect: Solid
+      palette: Default
+    target:
+      entity_id:
+      - light.wled01
+  - service: switch.turn_off
+    target:
+      entity_id: switch.christmas_lights
+    data: {}
+  - type: turn_off
+    device_id: ee48c3a3406c2f29ddebd695153fb383
+    entity_id: cc0074449809b56c103c126a2683c1e8
+    domain: switch
+  mode: single
+  initial_state: true
+- id: '1638802737485'
+  alias: LED - Christmas Lights - Turn Off
+  description: ''
+  trigger:
+  - platform: time_pattern
+    minutes: /10
+  condition:
+  - condition: time
+    after: '22:05:00'
+    before: '14:00:00'
+  - condition: state
+    entity_id: light.wled01
+    state: 'on'
+    enabled: false
+  action:
+  - service: light.turn_off
+    target:
+      entity_id:
+      - light.wled01
+    data: {}
+  mode: single
+- id: '1639167057359'
+  alias: LED - New Years
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00
+  condition:
+  - condition: template
+    value_template: '{{ now().month == 1 and now().day == 1}}'
+  action:
+  - service: select.select_option
+    target:
+      entity_id:
+      - select.wled01_preset
+    data:
+      option: Fireworks 1D - Party
+  - wait_for_trigger:
+    - platform: time
+      at: 00:10
+  - service: light.turn_off
+    data:
+      effect: Solid
+      palette: Default
+    target:
+      entity_id:
+      - light.wled01
+  mode: single
+  initial_state: true
+- id: '1663326954870'
+  alias: Tag test
+  description: ''
+  trigger:
+  - platform: tag
+    tag_id: d7363021-5252-4ffb-9bb1-1806d80cd5f8
+  condition: []
+  action:
+  - service: media_player.play_media
+    target:
+      entity_id: media_player.googlehome5943
+    data:
+      media_content_id: media-source://media_source/media/8d82b5_Star_Wars_R2-D2_Beep_Sound_Effect.mp3
+      media_content_type: audio/mpeg
+    metadata:
+      title: 8d82b5_Star_Wars_R2-D2_Beep_Sound_Effect.mp3
+      thumbnail:
+      media_class: music
+      children_media_class:
+      navigateIds:
+      - {}
+      - media_content_type: app
+        media_content_id: media-source://media_source
+      - media_content_type: ''
+        media_content_id: media-source://media_source/media/.
+  mode: single
+- id: '1678800010678'
+  alias: Cat Bown - Turn On
+  description: ''
+  trigger:
+  - platform: time
+    at: 08:00:00
+    enabled: false
+  - platform: time_pattern
+    minutes: /30
+  condition:
+  - condition: time
+    after: 07:00:00
+    before: '18:00:00'
+  action:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.cat_bowl
+  - delay:
+      hours: 0
+      minutes: 5
+      seconds: 0
+      milliseconds: 0
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.cat_bowl
+  mode: single
+- id: '1679319848733'
+  alias: Light Bathroom - Turn off no movement
+  description: ''
+  trigger:
+  - type: no_motion
+    platform: device
+    device_id: 29ac4e5dcbd1dd51a10d213685c2cf19
+    entity_id: binary_sensor.ms01_up_bathroom_occupancy
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - platform: state
+    entity_id:
+    - binary_sensor.msa04_bathroom_occupancy
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: 8f9e7429a614ac5bd9391dbd70e15753
+    entity_id: light.light03_bathroom
+    domain: light
+  - type: is_no_motion
+    condition: device
+    device_id: 29ac4e5dcbd1dd51a10d213685c2cf19
+    entity_id: binary_sensor.ms01_up_bathroom_occupancy
+    domain: binary_sensor
+  - type: is_no_motion
+    condition: device
+    device_id: 0bc832b6592c13959e1f02782b02634b
+    entity_id: 55777e43f7f13bbcd43481999199259f
+    domain: binary_sensor
+  - condition: state
+    entity_id: binary_sensor.dsa01_bathroom_contact
+    state: 'on'
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.light03_bathroom
+  mode: single
+- id: '1680029538012'
+  alias: Light Toilet - turn off after 2 min of no movement
+  description: ''
+  trigger:
+  - type: no_motion
+    platform: device
+    device_id: 05b6c0aa478d17b572cbef25c8140b1d
+    entity_id: binary_sensor.msa02_toilet_occupancy
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - type: no_motion
+    platform: device
+    device_id: 445b5cb0d5f6184036cb7fafc7e46f00
+    entity_id: ce6657f8c0cb530e5ef5a3bf618474f6
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: d2cdd63a993134d734c705b37e95a564
+    entity_id: light.light06_toilet
+    domain: light
+  - type: is_no_motion
+    condition: device
+    device_id: 05b6c0aa478d17b572cbef25c8140b1d
+    entity_id: binary_sensor.msa02_toilet_occupancy
+    domain: binary_sensor
+  - type: is_no_motion
+    condition: device
+    device_id: 445b5cb0d5f6184036cb7fafc7e46f00
+    entity_id: ce6657f8c0cb530e5ef5a3bf618474f6
+    domain: binary_sensor
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.light06_toilet
+  mode: single
+- id: '1680520540849'
+  alias: Bin - Reminder
+  description: ''
+  trigger:
+  - platform: calendar
+    event: start
+    offset: '-5:0:0'
+    entity_id: calendar.telford_and_wrekin_council
+  - platform: calendar
+    event: start
+    offset: '-4:0:0'
+    entity_id: calendar.telford_and_wrekin_council
+  condition:
+  - condition: state
+    entity_id: input_boolean.bins_out
+    state: 'off'
+  action:
+  - service: notify.notify
+    data:
+      message: It's bin day tomorrow
+      title: Take out the trash
+    enabled: true
+  - service: notify.alexa_media_echo_show
+    data:
+      message: It's bin day tomorrow
+      title: Take out the trash
+      data:
+        type: tts
+    enabled: true
+  - service: notify.alexa_media_andrew_s_fire
+    data:
+      message: It's bin day tomorrow
+      title: Take out the trash
+      data:
+        type: tts
+    enabled: true
+  - service: scene.create
+    data:
+      scene_id: speakers_before_bin
+      snapshot_entities:
+      - media_player.googlehome5943
+      - media_player.white_speaker
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.5
+    target:
+      entity_id:
+      - media_player.googlehome5943
+      - media_player.white_speaker
+  - service: tts.google_translate_say
+    data:
+      cache: true
+      entity_id:
+      - media_player.googlehome5943
+      - media_player.white_speaker
+      message: It's bin day tomorrow
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - service: scene.turn_on
+    data: {}
+    target:
+      entity_id: scene.speakers_before_bin
+  mode: single
+- id: '1682240952959'
+  alias: Heating - Heating turning 0n
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - climate.main_bedroom_thermostat
+    - climate.drew_office_thermostat
+    - climate.kamika_thermostat
+    - climate.taeyah_thermostat
+    - climate.entrance_thermostat
+    - climate.bathroom_thermostat
+    to: heat
+  condition:
+  - condition: state
+    entity_id: input_boolean.heating_notification
+    state: 'off'
+  - condition: time
+    after: '11:00:00'
+    before: '22:00:00'
+  action:
+  - service: cover.close_cover
+    data: {}
+    target:
+      entity_id: cover.bld01_main_bedroom
+  - service: input_boolean.turn_on
+    target:
+      entity_id: input_boolean.heating_notification
+    data: {}
+  - parallel:
+    - service: notify.mobile_app_drewskie_iphone_iosapp
+      data:
+        message: Heating is on please close curtains
+        title: Heating
+    - service: notify.alexa_media_echo_show
+      data:
+        message: Heating is on please close curtains
+        title: Heating
+        data:
+          type: tts
+    - service: notify.google_assistant_sdk
+      data:
+        message: Heating is on please close curtains
+    - service: notify.alexa_media_andrew_s_fire
+      data:
+        message: Heating is on please close curtains
+        title: Heating
+        data:
+          type: tts
+  mode: single
+- id: '1682241846702'
+  alias: Low Battery
+  description: ''
+  use_blueprint:
+    path: sbyx/low-battery-level-detection-notification-for-all-battery-sensors.yaml
+    input:
+      exclude:
+        entity_id: []
+        device_id:
+        - f54fa40be137e273122901e0638ed5b7
+        - ec81e792a389ca3e48517f0407855e85
+        - e2f1eb9e4e82d10b68f389df63eda68d
+        - 12885c2a257eed90f306f5b5785bb401
+        - a75d9824cc86913a9cf6db92b0b3b8f8
+      actions:
+      - service: notify.mobile_app_drewskie_iphone_iosapp
+        data:
+          title: Low Battery Warning
+          data:
+            actions:
+            - action: IGNORE
+              title: Ok
+              authenbticationRequired: false
+      time: '10:25:00'
+- id: '1684925995200'
+  alias: Gate Opened - Speaker Alert
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.dsa04_gate_contact
+    to: 'on'
+  condition:
+  - condition: time
+    after: 07:00
+    before: '18:00'
+  action:
+  - parallel:
+    - service: notify.mobile_app_drewskie_iphone_iosapp
+      data:
+        message: Side Gate open
+        title: Gate Open
+    - service: notify.alexa_media_echo_show
+      data:
+        message: Gate has been opened
+        title: gate
+        data:
+          type: tts
+    - service: notify.alexa_media_andrew_s_fire
+      data:
+        message: Gate has been opened
+        title: gate
+        data:
+          type: tts
+  mode: single
+- id: '1685459519741'
+  alias: Fan - On
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.office_tower_fan_state
+    to: 'on'
+  condition: []
+  action:
+  - service: remote.send_command
+    data:
+      device: office_wall_fan
+      command: speed
+    target:
+      entity_id: remote.universal_remote
+  mode: single
+- id: '1685460709362'
+  alias: 'Fan : set speed'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_number.office_tower_fan_speed
+  condition: []
+  action:
+  - service: remote.send_command
+    data:
+      device: office_wall_fan
+      command: speed
+    target:
+      entity_id: remote.universal_remote
+  mode: single
+- id: '1685464769101'
+  alias: Fan - OSC
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.office_tower_fan_osc
+  condition: []
+  action:
+  - service: remote.send_command
+    data:
+      num_repeats: 1
+      delay_secs: 0.4
+      hold_secs: 0
+      device: office_wall_fan
+      command: swing
+    target:
+      entity_id: remote.universal_remote
+  mode: single
+- id: '1686732954603'
+  alias: Fan - Off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.office_tower_fan_state
+    to: 'off'
+  condition: []
+  action:
+  - service: remote.send_command
+    data:
+      device: office_wall_fan
+      command: 'off'
+    target:
+      entity_id: remote.universal_remote
+  mode: single
+- id: '1687791873729'
+  alias: 'TTS: mediaplayer select option'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_select.tts_media_players
+    - input_select.tts_language
+    - input_select.tts_volume
+    - input_text.tts_message
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: input_select.tts_media_players
+        state: White Speaker
+      - condition: state
+        entity_id: input_select.tts_media_players
+        state: Landing Speaker
+      sequence:
+      - service: input_text.set_value
+        data:
+          value: media_player.white_speaker
+        target:
+          entity_id: input_text.tts_media_player_name
+    - conditions:
+      - condition: state
+        entity_id: input_select.tts_media_players
+        state: Office Speaker
+      sequence:
+      - service: input_text.set_value
+        data:
+          value: media_player.googlehome5943
+        target:
+          entity_id: input_text.tts_media_player_name
+    - conditions:
+      - condition: state
+        entity_id: input_select.tts_media_players
+        state: All Speakers
+      sequence:
+      - service: input_text.set_value
+        data:
+          value: media_player.google_speakes_all
+        target:
+          entity_id: input_text.tts_media_player_name
+    default: []
+  mode: single
+- id: '1688719067378'
+  alias: Voice - Turn off the office
+  description: ''
+  trigger:
+  - platform: conversation
+    command: Turn off the office
+  condition: []
+  action:
+  - service: fan.turn_off
+    data: {}
+    target:
+      entity_id: fan.office_tower_fan
+  mode: single
+- id: '1689350724126'
+  alias: Office - Turn off lighst if no one is home
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.office_motion_group
+    - binary_sensor.office_occupancy_group
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+  condition:
+  - condition: state
+    entity_id: binary_sensor.office_motion_group
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.office_occupancy_group
+    state: 'off'
+  action:
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id:
+      - switch.zswitch01_office_light_01
+      - switch.zswitch02_office_light_02
+      - switch.zswitch03_office_light_03
+  mode: single
+- id: '1689704366983'
+  alias: Bins - Out Reset
+  description: ''
+  trigger:
+  - platform: time
+    at: 00:00:01
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    data: {}
+    target:
+      entity_id:
+      - input_boolean.bins_out
+      - input_boolean.heating_notification
+  mode: single
+- id: '1692124479092'
+  alias: Light Kitchen - Turn off no movement
+  description: ''
+  trigger:
+  - type: no_motion
+    platform: device
+    device_id: cc95f3ee22e32b818076c9db01b2d407
+    entity_id: 1f7901f669a5cc94b1526daea89f0229
+    domain: binary_sensor
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  - platform: state
+    entity_id:
+    - binary_sensor.esp1_04_occupancy
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: 3c567f412223139776a07395cf54f162
+    entity_id: 4479026776761177f980b9bbb6162bfd
+    domain: light
+  - type: is_no_motion
+    condition: device
+    device_id: cc95f3ee22e32b818076c9db01b2d407
+    entity_id: 1f7901f669a5cc94b1526daea89f0229
+    domain: binary_sensor
+  - condition: state
+    entity_id: binary_sensor.esp1_04_occupancy
+    state: 'off'
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.kitchen_light
+  mode: single
+- id: '1695289223303'
+  alias: Deep Freeze is off
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.0x84fd27fffece6deb
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 1
+      seconds: 0
+  condition:
+  - condition: state
+    entity_id: switch.0x84fd27fffece6deb
+    state: 'off'
+  action:
+  - service: notify.notify
+    data:
+      title: Deep Freeze
+      message: Deep Freeze plug is off
+  mode: single
+- id: '1701017033927'
+  alias: Lights - XMAS Tree
+  description: ''
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: '-60'
+  - platform: time
+    at: '22:00:00'
+  condition: []
+  action:
+  - if:
+    - condition: device
+      type: is_off
+      device_id: ee48c3a3406c2f29ddebd695153fb383
+      entity_id: cc0074449809b56c103c126a2683c1e8
+      domain: switch
+    - condition: sun
+      after: sunset
+      after_offset: '-60'
+    - condition: time
+      before: '22:00:00'
+    then:
+    - service: switch.turn_on
+      data: {}
+      target:
+        entity_id: switch.christmas_tree_outlet
+    else:
+    - condition: time
+      after: '17:00:00'
+      before: '22:00:00'
+      weekday:
+      - sat
+      - fri
+      - thu
+      - wed
+      - tue
+      - mon
+      - sun
+      enabled: false
+    - service: switch.turn_off
+      data: {}
+      target:
+        entity_id: switch.christmas_tree_outlet
+  mode: single
+- id: '1701193244289'
+  alias: Light - Back door on with gate/motion/door
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.dsa04_gate_contact
+    to: 'on'
+  - platform: state
+    entity_id:
+    - binary_sensor.back_door_occupancy
+    to: 'on'
+    enabled: false
+  - type: opened
+    platform: device
+    device_id: 5a43c5dffe6c37d955e858443cb71cb6
+    entity_id: 44a4a345e2c8d8d1780f9fbe35cc9087
+    domain: binary_sensor
+    enabled: false
+  condition:
+  - condition: sun
+    before: sunrise
+    after: sunset
+    after_offset: '-60'
+  action:
+  - type: turn_on
+    device_id: 800c53c37a6cb3eb0616c46486deedc9
+    entity_id: a52bcd0c7d403576cfaa06745a2e194e
+    domain: switch
+  mode: single
+- id: '1701193576206'
+  alias: Light - Back Door off 2 min
+  description: ''
+  trigger:
+  - platform: time_pattern
+    minutes: /1
+  condition:
+  - condition: and
+    conditions:
+    - type: is_not_open
+      condition: device
+      device_id: 5a43c5dffe6c37d955e858443cb71cb6
+      entity_id: 44a4a345e2c8d8d1780f9fbe35cc9087
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 2
+        seconds: 0
+    - type: is_no_motion
+      condition: device
+      device_id: b72555ad86aa75886d329490824d1bd2
+      entity_id: 68fcb2daa07f387eb5e6eb76ea9106e9
+      domain: binary_sensor
+      for:
+        hours: 0
+        minutes: 2
+        seconds: 0
+    - condition: device
+      type: is_on
+      device_id: 800c53c37a6cb3eb0616c46486deedc9
+      entity_id: a52bcd0c7d403576cfaa06745a2e194e
+      domain: switch
+  action:
+  - type: turn_off
+    device_id: 800c53c37a6cb3eb0616c46486deedc9
+    entity_id: a52bcd0c7d403576cfaa06745a2e194e
+    domain: switch
+  mode: single
+- id: '1701730171553'
+  alias: Advanced Heating Control - Kamika
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control.yaml
+    input:
+      input_trvs:
+      - climate.kamika_thermostat
+      input_temperature_minimum: 12
+      input_temperature_comfort_static: 19
+      input_calibration_rounding_full_values: false
+      input_off_instead_min: true
+      input_scheduler_regular: schedule.heating_kamika
+      input_reset_comfort_temperature: true
+      input_persons:
+      - person.kamika_rough
+      input_temperature_sensor: sensor.kamika_avg_temperature
+      input_split_service_calls: false
+- id: '1702025807581'
+  alias: Light - Office if door opens
+  description: ''
+  trigger:
+  - type: opened
+    platform: device
+    device_id: 7197838726044f7fe66673724bc2f016
+    entity_id: baa6c670f135b6c0c42d4380bb1c53d3
+    domain: binary_sensor
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.office_avg_illuminance
+    below: 4
+  - condition: device
+    type: is_off
+    device_id: d45008b0e950330bf5fc73ed28581bbb
+    entity_id: 32cb0e51956c6ddb522a383befdc3716
+    domain: light
+  action:
+  - service: light.turn_on
+    target:
+      entity_id: light.zswitch03_office_light_03
+    data: {}
+  mode: single
+- id: '1702234265879'
+  alias: Advanced Heating Control - Taeyah
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control.yaml
+    input:
+      input_trvs:
+      - climate.taeyah_thermostat
+      input_temperature_minimum: 12
+      input_temperature_comfort_static: 19
+      input_calibration_rounding_full_values: false
+      input_off_instead_min: true
+      input_scheduler_regular: schedule.heating_taeyah
+      input_reset_comfort_temperature: true
+      input_persons:
+      - person.taeyah_rough
+      input_temperature_sensor: sensor.taeyah_avg_temperature
+      input_split_service_calls: false
+- id: '1702234979323'
+  alias: Advanced Heating Control - Bathroom
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control.yaml
+    input:
+      input_trvs:
+      - climate.bathroom_thermostat
+      input_scheduler_regular: schedule.heating_bathroom
+      input_temperature_minimum: 12
+      input_temperature_comfort_static: 20
+      input_reset_comfort_temperature: true
+      input_off_instead_min: true
+      input_persons:
+      - person.andrew_rough
+      - person.kamika_rough
+      - person.taeyah_rough
+      - person.natasha_rough
+      input_temperature_sensor: sensor.bathroom_avg_temperature
+      input_split_service_calls: false
+- id: '1702235268480'
+  alias: Advanced Heating Control - Main Bedroom
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control.yaml
+    input:
+      input_trvs:
+      - climate.main_bedroom_thermostat
+      input_temperature_minimum: 12
+      input_temperature_comfort_static: 18
+      input_reset_comfort_temperature: true
+      input_scheduler_regular: schedule.heating_main_bedroom
+      input_persons:
+      - person.andrew_rough
+      - person.natasha_rough
+      input_off_instead_min: true
+      input_temperature_sensor: sensor.dressing_room_avg_temperature
+      input_split_service_calls: false
+- id: '1702236817793'
+  alias: Advanced Heating Control - Dressing Room
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control.yaml
+    input:
+      input_trvs:
+      - climate.dressing_room_thermostat
+      input_scheduler_regular: schedule.heating_dressing_room
+      input_temperature_minimum: 12
+      input_temperature_comfort_static: 18
+      input_reset_comfort_temperature: true
+      input_persons:
+      - person.kamika_rough
+      - person.taeyah_rough
+      - person.natasha_rough
+      input_off_instead_min: true
+      input_temperature_sensor: sensor.dressing_room_avg_temperature
+      input_split_service_calls: false
+      input_temperature_comfort: input_number.heating_comfy_dressing_room
+- id: '1702714801015'
+  alias: Calendar - Leave On
+  description: ''
+  trigger:
+  - platform: calendar
+    event: start
+    offset: 0:0:0
+    entity_id: calendar.drewskie_za_gmail_com
+    alias: Calendar Drew
+  - platform: calendar
+    event: start
+    offset: 0:0:0
+    entity_id: calendar.family
+    alias: Calendar Family
+  - platform: calendar
+    event: start
+    offset: 0:0:0
+    entity_id: calendar.kids_stuff
+    alias: Calendar Kid Stuff
+  - platform: calendar
+    event: start
+    offset: 0:0:0
+    entity_id: calendar.nwp_work
+    alias: Calendar NWP Work
+  - platform: calendar
+    event: start
+    offset: 0:0:0
+    entity_id: calendar.local
+    alias: Calendar Local
+  - platform: calendar
+    event: start
+    offset: 0:0:0
+    entity_id: calendar.tash
+    alias: Calendar Tash
+  - platform: calendar
+    event: start
+    offset: -0:0:0
+    entity_id: calendar.holidays_in_united_kingdom
+    alias: Bank Holidays
+  - platform: calendar
+    event: start
+    offset: -0:0:0
+    entity_id: calendar.kamikaleigh_gmail_com
+    alias: Calendar Kamika
+  condition:
+  - condition: or
+    conditions:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Drew Leave'' }}'
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Tash Leave'' }}'
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Taeyah Holiday'' }}'
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Taeyah Holiday'' }}'
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Kamika Holiday'' }}'
+  action:
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Drew Leave'' }}'
+    then:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.drew_on_leave
+      data: {}
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Tash Leave'' }}'
+    then:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.tash_on_leave
+      data: {}
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Taeyah Holiday'' }}'
+    then:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.taeyah_on_leave
+      data: {}
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Kamika Holiday'' }}'
+    then:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.kamika_on_leave
+      data: {}
+  mode: parallel
+- id: '1702715109972'
+  alias: Calendar - Leave off
+  description: ''
+  trigger:
+  - platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.drewskie_za_gmail_com
+    alias: Calendar Drew
+  - platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.family
+    alias: Calendar Family
+  - platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.kids_stuff
+    alias: Calendar Kid Stuff
+  - platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.nwp_work
+    alias: Calendar NWP Work
+  - platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.local
+    alias: Calendar Local
+  - platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.tash
+    alias: Calendar Tash
+  - alias: Calendar Kamika
+    platform: calendar
+    event: end
+    offset: 0:0:0
+    entity_id: calendar.kamikaleigh_gmail_com
+  condition:
+  - condition: or
+    conditions:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Drew Leave'' }}'
+      alias: Drew Leave
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Tash Leave'' }}'
+      alias: Tash Leave
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Taeyah Holiday'' }}'
+      alias: Taeyah Holiday
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Kamika Holiday'' }}'
+  action:
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Drew Leave'' }}'
+    then:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.drew_on_leave
+      data: {}
+    alias: Drew Leave
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Tash Leave'' }}'
+    then:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.tash_on_leave
+      data: {}
+    alias: Tash Leave
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Taeyah Holiday'' }}'
+    then:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.taeyah_on_leave
+      data: {}
+    alias: Taeyah Holiday
+  - if:
+    - condition: template
+      value_template: '{{ trigger.calendar_event.summary == ''Kamika Holiday'' }}'
+    then:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.kamika_on_leave
+      data: {}
+    alias: Kamika Holiday
+  mode: parallel
+- id: '1702911080222'
+  alias: Light Hallway - Turn off no movement
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.msa07_kitchen_occupancy
+    - binary_sensor.ms04_entrance_hall_occupancy
+    - binary_sensor.alarm_hallway_2
+    - binary_sensor.back_door_occupancy
+    - binary_sensor.esp1_04_occupancy
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: c0c92189663d351dd341ded6686abefa
+    entity_id: e4696c96753bf2b6d9c9eaf414feef10
+    domain: light
+  - condition: state
+    entity_id:
+    - binary_sensor.msa07_kitchen_occupancy
+    - binary_sensor.ms04_entrance_hall_occupancy
+    - binary_sensor.alarm_hallway_2
+    - binary_sensor.back_door_occupancy
+    - binary_sensor.esp1_04_occupancy
+    state: 'off'
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id:
+      - light.hallway_light
+  mode: single
+- id: '1702911199149'
+  alias: Light Entrance - Turn off no movement
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.msa07_kitchen_occupancy
+    - binary_sensor.ms04_entrance_hall_occupancy
+    - binary_sensor.alarm_hallway_2
+    - binary_sensor.back_door_occupancy
+    - binary_sensor.esp1_04_occupancy
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: 09a214b2a1239361fa5c39c3d255442b
+    entity_id: ba5bdfb5fe89d4ad15b37a065a933c6d
+    domain: light
+  - condition: state
+    entity_id:
+    - binary_sensor.msa07_kitchen_occupancy
+    - binary_sensor.ms04_entrance_hall_occupancy
+    - binary_sensor.alarm_hallway_2
+    - binary_sensor.back_door_occupancy
+    - binary_sensor.esp1_04_occupancy
+    state: 'off'
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id:
+      - light.light07_entrance
+  mode: single
+- id: '1702911809226'
+  alias: Light Dining - Turn off no movement
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.msa11_dining_room_occupancy
+    - binary_sensor.esp1_08_occupancy
+    - binary_sensor.alarm_lounge_motion
+    to: 'off'
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+  condition:
+  - condition: device
+    type: is_on
+    device_id: a8c4a9384034ab5d5443c0ebe2cb754a
+    entity_id: 91297e942e744e7445dad27b97926a5c
+    domain: light
+  - condition: state
+    entity_id: binary_sensor.msa11_dining_room_occupancy
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.esp1_08_occupancy
+    state: 'off'
+  - condition: state
+    entity_id: binary_sensor.alarm_lounge_motion
+    state: 'off'
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id:
+      - light.dining_light
+  mode: single
+- id: '1703061021732'
+  alias: Advanced Heating Control v4 - Taeyah
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control_v4.yaml
+    input:
+      input_trvs:
+      - climate.taeyah_thermostat
+      input_temperature_comfort_static: 16
+      input_persons: []
+      input_schedulers:
+      - schedule.heating_taeyah
+      input_temperature_sensor: sensor.taeyah_avg_temperature
+      input_reset_comfort_temperature: false
+      input_off_instead_min: true
+      input_temperature_comfort: input_number.comfy_taeyah
+      input_calibration_generic: true
+      input_mode_party: input_boolean.heating_override_taeyah
+      input_calibration_delta: 0.2
+      input_aggressive_mode: true
+      input_mode_winter_threshold: 10
+      input_temperature_minimum_static: 4
+      input_mode_outside_temperature: sensor.outside_avg_temperature
+- id: '1703062195922'
+  alias: Advanced Heating Control v4 - Bathroom
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control_v4.yaml
+    input:
+      input_trvs:
+      - climate.bathroom_thermostat
+      input_temperature_comfort_static: 20
+      input_persons:
+      - person.andrew_rough
+      - person.natasha_rough
+      - person.kamika_rough
+      - person.taeyah_rough
+      input_schedulers:
+      - schedule.heating_bathroom
+      input_temperature_sensor: sensor.bathroom_avg_temperature
+      input_off_instead_min: true
+      input_reset_comfort_temperature: true
+      input_calibration_generic: true
+      input_calibration_delta: 0.2
+      input_temperature_comfort: input_number.heating_comfy_bathroom
+      input_mode_party: input_boolean.heating_override_bathroom
+      input_temperature_minimum_static: 4
+      input_mode_winter_threshold: 10
+      input_aggressive_mode: true
+      input_mode_outside_temperature: sensor.outside_avg_temperature
+- id: '1703062436463'
+  alias: Advanced Heating Control v4 - Dressing Room
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control_v4.yaml
+    input:
+      input_trvs:
+      - climate.dressing_room_thermostat
+      input_temperature_comfort_static: 18
+      input_persons:
+      - person.kamika_rough
+      - person.natasha_rough
+      - person.taeyah_rough
+      input_schedulers:
+      - schedule.heating_dressing_room
+      input_temperature_sensor: sensor.dressing_room_avg_temperature
+      input_reset_comfort_temperature: true
+      input_off_instead_min: true
+      input_calibration_generic: true
+      input_temperature_comfort: input_number.heating_comfy_dressing_room
+      input_mode_party: input_boolean.heating_override_dressing_room
+      input_calibration_delta: 0.2
+      input_mode_winter_threshold: 10
+      input_aggressive_mode: true
+      input_temperature_minimum_static: 4
+      input_mode_outside_temperature: sensor.outside_avg_temperature
+- id: '1703062598422'
+  alias: Advanced Heating Control v4 - Kamika
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control_v4.yaml
+    input:
+      input_trvs:
+      - climate.kamika_thermostat
+      input_temperature_comfort_static: 16
+      input_persons: []
+      input_schedulers:
+      - schedule.heating_kamika
+      input_temperature_sensor: sensor.kamika_avg_temperature
+      input_off_instead_min: true
+      input_reset_comfort_temperature: false
+      input_temperature_comfort: input_number.comfy_kamika
+      input_calibration_generic: true
+      input_mode_party: input_boolean.heating_overide_kamika
+      input_calibration_delta: 0.2
+      input_mode_winter_threshold: 10
+      input_aggressive_mode: true
+      input_temperature_minimum_static: 4
+      input_mode_outside_temperature: sensor.outside_avg_temperature
+- id: '1703062709141'
+  alias: Advanced Heating Control v4 - Main Bedroom
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control_v4.yaml
+    input:
+      input_trvs:
+      - climate.main_bedroom_thermostat
+      input_temperature_comfort_static: 18
+      input_persons:
+      - person.andrew_rough
+      - person.natasha_rough
+      input_schedulers:
+      - schedule.heating_main_bedroom
+      input_reset_comfort_temperature: true
+      input_off_instead_min: true
+      input_temperature_sensor: sensor.main_bedroom_avg_temperature
+      input_calibration_generic: true
+      input_temperature_comfort: input_number.heating_comfy_main_bedroom
+      input_mode_party: input_boolean.heating_override_main_bedroom
+      input_temperature_minimum_static: 4
+      input_mode_winter_threshold: 10
+      input_aggressive_mode: true
+      input_calibration_delta: 0.2
+      input_mode_outside_temperature: sensor.outside_avg_temperature
+- id: '1703066040268'
+  alias: Advanced Heating Control v4 - Kamika - Set Comfy Temp
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - person.kamika_rough
+  - platform: state
+    entity_id:
+    - climate.kamika_thermostat
+    to: heat
+  condition: []
+  action:
+  - if:
+    - condition: state
+      entity_id: person.kamika_rough
+      state: home
+    then:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.comfy_kamika
+      data:
+        value: 18
+    else:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.comfy_kamika
+      data:
+        value: 16
+  mode: single
+- id: '1703066271953'
+  alias: Advanced Heating Control v4 - Taeyah - Set Comfy Temp
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - person.taeyah_rough
+  - platform: state
+    entity_id:
+    - climate.taeyah_thermostat
+    to: heat
+  condition: []
+  action:
+  - if:
+    - condition: state
+      entity_id: person.taeyah_rough
+      state: home
+    then:
+    - service: input_number.set_value
+      target:
+        entity_id:
+        - input_number.comfy_taeyah
+      data:
+        value: 18
+    else:
+    - service: input_number.set_value
+      target:
+        entity_id:
+        - input_number.comfy_taeyah
+      data:
+        value: 16
+  mode: single
+- id: '1703087859168'
+  alias: Advanced Heating Control v4 - Taeyah - Reset Override
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - schedule.heating_taeyah
+    to:
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id: input_boolean.heating_override_taeyah
+    data: {}
+  mode: single
+- id: '1703088027401'
+  alias: Advanced Heating Control v4 - Kamika - Reset Override
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - schedule.heating_kamika
+    to:
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.heating_overide_kamika
+    data: {}
+  mode: single
+- id: '1703100695178'
+  alias: Advanced Heating Control v4 - Bathroom - Reset Override
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - schedule.heating_bathroom
+    to:
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.heating_override_bathroom
+    data: {}
+  mode: single
+- id: '1703100823371'
+  alias: Advanced Heating Control v4 - Dressing Room - Reset Override
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - schedule.heating_dressing_room
+    to:
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.heating_override_dressing_room
+    data: {}
+  mode: single
+- id: '1703100870325'
+  alias: Advanced Heating Control v4 - Main Bedroom - Reset Override
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - schedule.heating_main_bedroom
+    to:
+    for:
+      hours: 0
+      minutes: 5
+      seconds: 0
+  condition: []
+  action:
+  - service: input_boolean.turn_off
+    target:
+      entity_id:
+      - input_boolean.heating_override_main_bedroom
+    data: {}
+  mode: single
+- id: '1704139872590'
+  alias: Advanced Heating Control v4 - Entrance
+  description: ''
+  use_blueprint:
+    path: panhans/heating_control_v4.yaml
+    input:
+      input_trvs:
+      - climate.entrance_thermostat
+      input_temperature_minimum_static: 4
+      input_temperature_comfort_static: 18
+      input_temperature_comfort: input_number.heating_comfy_entrance
+      input_mode_party: input_boolean.heating_override_entrance
+      input_temperature_sensor: sensor.entrance_avg_temperature
+      input_calibration_generic: true
+      input_calibration_delta: 0.2
+      input_mode_winter_threshold: 10
+      input_reset_comfort_temperature: true
+      input_aggressive_mode: true
+      input_off_instead_min: true
+      input_mode_outside_temperature: sensor.outside_avg_temperature
+- id: '1704912839410'
+  alias: iCloud - Update Kamika if home
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - device_tracker.unifi_4a_ae_dc_47_60_b6_default
+    to: home
+  - platform: state
+    entity_id:
+    - device_tracker.unifi_4a_ae_dc_47_60_b6_default
+    to: away
+  condition: []
+  action:
+  - service: icloud3.action
+    data:
+      command: Locate Device(s) using iCloud FamShr
+      device_name: 6521f2af03cb77959bd9fcf3225ccc77
+  mode: single
+- id: '1704913058681'
+  alias: iCloud - Update Tash if home
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - device_tracker.tash_iphone_2
+    to: home
+  - platform: state
+    entity_id:
+    - device_tracker.tash_iphone_2
+    to: not_home
+  condition: []
+  action:
+  - service: icloud3.action
+    data:
+      command: Locate Device(s) using iCloud FamShr
+      device_name: 0baeed56957ddd0eb0ffabdfe1682ad7
+  - service: icloud3.action
+    data:
+      command: Send Locate Request to iOS App
+      device_name: 0baeed56957ddd0eb0ffabdfe1682ad7
+  mode: single
+- id: '1704913153796'
+  alias: iCloud - Update Tae if home
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - device_tracker.iphone
+    to: home
+  - platform: state
+    entity_id:
+    - device_tracker.iphone
+    to: not_home
+  condition: []
+  action:
+  - service: icloud3.action
+    data:
+      command: Locate Device(s) using iCloud FamShr
+      device_name: e8a135c5b64f472242c035841cec8583
+  - service: icloud3.action
+    data:
+      command: Send Locate Request to iOS App
+      device_name: e8a135c5b64f472242c035841cec8583
+  mode: single
+- id: '1704913241532'
+  alias: iCloud - Update Drew if home
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - device_tracker.drewskie_iphone_3
+    to: home
+  - platform: state
+    entity_id:
+    - device_tracker.drewskie_iphone_3
+    to: not_home
+  condition: []
+  action:
+  - service: icloud3.action
+    data:
+      command: Locate Device(s) using iCloud FamShr
+      device_name: f303036701c92f43702c39523e0f9bca
+  - service: icloud3.action
+    data:
+      command: Send Locate Request to iOS App
+      device_name: f303036701c92f43702c39523e0f9bca
+  mode: single
+- id: '1706023432941'
+  alias: ESPs Restart
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_button.esps_restart
+    to:
+  condition: []
+  action:
+  - service: button.press
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - button.drew_office_esp1_restart
+      - button.tash_office_esp02_restart
+      - button.outside_esp3_restart
+      - button.esp1_04_restart
+      - button.esp1_05_restart
+      - button.esp1_06_restart
+      - button.esp1_07_restart
+      - button.esp1_08_restart
+      - button.esp1_09_restart
+  mode: single
+- id: '1706564940555'
+  alias: Octopus Energy - Join Saving Session
+  description: ''
+  use_blueprint:
+    path: BottlecapDave/octopus_energy_octoplus_join_saving_session.yml.yaml
+    input:
+      saving_session_event_entity: event.octopus_energy_a_c7f64b4f_octoplus_saving_session_events
+- id: '1706689685844'
+  alias: Tash Desk Turn On
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.office_door_group
+    to:
+  condition:
+  - condition: time
+    after: 05:00:00
+    before: '20:00:00'
+    weekday:
+    - fri
+    - thu
+    - wed
+    - tue
+    - mon
+  action:
+  - type: turn_on
+    device_id: 4b63fdbc35785fd0090da0a67efba713
+    entity_id: 4e83a776129c5b76a4b1fa98632da84a
+    domain: switch
+  mode: single
+- id: '1706689792747'
+  alias: Tash Off Turn Off
+  description: ''
+  trigger:
+  - platform: time
+    at: '22:00:00'
+  condition: []
+  action:
+  - type: turn_off
+    device_id: 4b63fdbc35785fd0090da0a67efba713
+    entity_id: 4e83a776129c5b76a4b1fa98632da84a
+    domain: switch
+  mode: single
+- id: '1706710101510'
+  alias: Toothless Tracker
+  description: ''
+  trigger:
+  - platform: time
+    at: '19:00:00'
+  condition:
+  - condition: numeric_state
+    entity_id: sensor.toothless_tracker_battery
+    below: 50
+  action:
+  - service: notify.notify
+    data:
+      message: Battery below 50 percent
+      title: Toothless Tracker
+    enabled: true
+  - service: notify.alexa_media_echo_show
+    data:
+      message: Battery below 50 percent
+      title: Toothless Tracker
+      data:
+        type: tts
+    enabled: true
+  - service: notify.alexa_media_andrew_s_fire
+    data:
+      message: toothless battery below 50 percent
+      title: Toothless Tracker
+      data:
+        type: tts
+    enabled: true
+  - service: scene.create
+    data:
+      scene_id: speakers_before_tracker
+      snapshot_entities:
+      - media_player.googlehome5943
+      - media_player.white_speaker
+  - service: media_player.volume_set
+    data:
+      volume_level: 0.5
+    target:
+      entity_id:
+      - media_player.googlehome5943
+      - media_player.white_speaker
+  - service: tts.google_translate_say
+    data:
+      cache: true
+      entity_id: media_player.googlehome5943
+      message: toothless battery below 50 percent
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - service: scene.turn_on
+    data: {}
+    target:
+      entity_id: scene.speakers_before_tracker
+  mode: single
+- id: '1707162579038'
+  alias: GitHub - Push updates
+  description: ''
+  trigger:
+  - at: '23:23:23'
+    platform: time
+  condition: []
+  action:
+  - data:
+      addon: a0d7b954_ssh
+      input: /config/ha_gitpush.sh
+    service: hassio.addon_stdin
+  mode: single

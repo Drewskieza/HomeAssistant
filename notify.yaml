@@ -1,0 +1,11 @@
+- platform: group
+  name: perants
+  services:
+    - service: mobile_app_drewskie_iphone
+    - service: mobile_app_natashas_iphone_14
+
+   
+- platform: hass_agent_notifier
+  name: "Drewskie-PC.notify"
+  resource: http://192.168.1.10:5115/notify   
+    

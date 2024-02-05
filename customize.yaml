@@ -1,0 +1,45 @@
+sensor.disk_use_percent:
+  friendly_name: HA Disk use (percent)
+sensor.plex_online:
+  entity_picture: /local/images/plex.png
+  friendly_name: Plex
+sensor.jackett_online:
+  entity_picture: /local/images/jackett.png
+  friendly_name: Jackett
+sensor.sonarr_online:
+  entity_picture: /local/images/sonarr.png
+  friendly_name: Sonarr
+sensor.radarr_online:
+  entity_picture: /local/images/radarr.png
+  friendly_name: Radarr
+sensor.lidarr_online:
+  entity_picture: /local/images/lidarr.png
+  friendly_name: Lidarr
+sensor.qbtorrent_online:
+  entity_picture: /local/images/qb.png
+  friendly_name: qBTorrent
+sensor.ombi_online:
+  entity_picture: /local/images/ombi.png
+  friendly_name: OMBI
+sensor.utorrent_online:
+  entity_picture: /local/images/utorrent.png
+  friendly_name: uTorrent  
+sensor.nzb_hydra_online:
+  entity_picture: /local/images/nzbhydra.png
+  friendly_name: NZB Hydra
+sensor.ombi_approved_requests:
+  friendly_name: OMBI Approved
+sensor.ombi_available_requests:
+  friendly_name: OMBI Available
+sensor.ombi_movie_requests:
+  friendly_name: OMBI Movie
+sensor.ombi_music_album_requests:
+  friendly_name: OMBI Music
+sensor.ombi_pending_requests:
+  friendly_name: OMBI Pending
+sensor.ombi_tv_show_requests:
+  friendly_name: OMBI Series
+group.parents:
+  icon: mdi:account-group-outline
+
+  

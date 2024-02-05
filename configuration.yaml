@@ -1,0 +1,126 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+history:
+#sun:
+system_health:
+bluetooth:
+homeassistant:
+#  external_url: "https://ha.daniestreet.duckdns.org"
+#  internal_url: "http://192.168.1.220:8123"
+  packages: !include_dir_named components/packages
+#  currency: "ZAR"
+  allowlist_external_dirs:
+    - "/config"
+  allowlist_external_urls:
+    - "http://images.com/image1.png"
+  media_dirs:
+    media: /media
+    recordings: /media/recordings
+# legacy_templates: false
+  customize: !include customize.yaml
+  customize_glob: !include customize_glob.yaml
+downloader:
+  download_dir: downloads
+# Text to speech
+tts:
+  - platform: google_translate
+
+recorder:
+  exclude:
+    entities:
+      - sensor.watchman_missing_entities
+      - sensor.icloud3_event_log
+#discovery:
+
+ios:
+
+energy:
+
+input_number:
+  current_volume:
+    name: 'Current volume'
+    min: 0
+    max: 1
+
+shell_command:
+  tash_shutdown: ssh "natasha Whiteley"@imac sudo shutdown -r now
+  tash_shutdown2: ssh "natasha Whiteley"@Natashas-iMac-2 sudo shutdown -r now
+  nut1_reboot: "/config/reboot_nut1.sh"
+  vm_start: ssh -i /config/ssh/id_rsa -o 'StrictHostKeyChecking=no' startup@192.168.1.249 'power on'
+  nut1_sensor: "/config/nut1_sensors.sh"
+  drew_ups_beeper: "/config/drew-ups-beeper.sh"
+  drew2_ups_beeper: "/config/drew2-ups-beeper.sh"
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+sensor: !include sensor.yaml
+mobile_app: !include iOS.yaml
+notify: !include notify.yaml
+
+#influxdb:
+#  host: a0d7b954-influxdb
+#  port: 8086
+#  database: !secret influxdb_database
+#  username: !secret influxdb_user
+#  password: !secret influxdb_password
+#  max_retries: 3
+#  default_measurement: state
+
+http:
+#  base_url: https://daniestreet.duckdns.org:8123
+#  ssl_certificate: /ssl/fullchain.pem
+#  ssl_key: /ssl/privkey.pem
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.30.33.0/24
+    - 172.16.0.0/16
+    - 192.168.0.0/22
+
+
+logger:
+  default: info
+  logs:
+    homeassistant.components.homekit.type_media_players: error
+    homeassistant.components.command_line.sensor: error
+    homeassistant.components.rest.sensor: error
+    homeassistant.components.shell_command: debug
+    #bravia_tv.braviarc: error
+    homeassistant.components.websocket_api: fatal
+    homeassistant.helpers.service: error
+    homeassistant.components.media_player: error
+    homeassistant.helpers.entity: error
+    homeassistant.helpers.event: fatal
+    homeassistant.components.ipp: fatal
+    pyatv: error
+    homeassistant.components.apple_tv: error
+    androidtv.adb_manager.adb_manager_async: error
+    homeassistant.components.androidtv.media_player: error
+    homeassistant.components.unifi: error
+    homeassistant.components.device_tracker.unifi: error
+    homeassistant.components.switch.unifi: error    
+    custom_components.hass_agent_notifier: error
+
+#panel_iframe:
+#  tasmoadmin:
+#    title: TasmoAdmin
+#    icon: mdi:lightbulb-on
+#    url: http://192.168.0.52:9541
+#    require_admin: true
+
+
+input_select:
+  pool_pump_mode:
+    name: Pool Pump mode
+    options:
+      - 'Auto'
+      - 'On'
+      - 'Off'
+    initial: 'Auto'
+    icon: mdi:pump  
+    
+#zha:
+# zigpy_config:
+#   topology_scan_period: 30

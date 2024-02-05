@@ -1,0 +1,11 @@
+"sensor.th*_power":
+  style: |
+    --paper-item-icon-color:
+     {% set level = states(config.entity)|float %}
+     {% if level == 0 %} black
+     {% elif level < 1 %} maroon
+     {% elif level < 20 %} firebrick
+     {% elif level < 50 %} orange
+     {% elif level < 70 %} green
+     {% elif level < 90 %} gold
+     {% else %} azure
