@@ -1,0 +1,134 @@
+binary_sensor:
+  - name: "Office Motion Group"
+    unique_id: office_motion_group
+    device_class: motion
+    state: >
+              {% set DOMAIN = 'motion' %}
+              {% set STATUS = 'on' %}
+              {% set ENTITY_ID = 'all_motion' %}
+              {% set AREA = 'Office' %}
+              {{ states.binary_sensor  | selectattr('attributes.device_class', '==', DOMAIN) | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count >0 }}
+
+  - name: "Office Occupancy Group"
+    unique_id: office_occupancy_group
+    device_class: occupancy
+    state: >
+              {% set DOMAIN = 'occupancy' %}
+              {% set STATUS = 'on' %}
+              {% set ENTITY_ID = 'all_occupancy' %}
+              {% set AREA = 'Office' %}
+              {{ states.binary_sensor  | selectattr('attributes.device_class', '==', DOMAIN) | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count >0 }}
+
+  - name: "Office Window Group"
+    unique_id: office_window_group
+    device_class: window
+    state: >
+              {% set DOMAIN = 'window' %}
+              {% set STATUS = 'on' %}
+              {% set ENTITY_ID = 'all_window' %}
+              {% set AREA = 'Office' %}
+              {{ states.binary_sensor  | selectattr('attributes.device_class', '==', DOMAIN) | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count >0 }}
+
+  - name: "Office Door Group"
+    unique_id: office_door_group
+    device_class: door
+    state: >
+              {% set DOMAIN = 'door' %}
+              {% set STATUS = 'on' %}
+              {% set ENTITY_ID = 'all_door' %}
+              {% set AREA = 'Office' %}
+              {{ states.binary_sensor  | selectattr('attributes.device_class', '==', DOMAIN) | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count >0 }}
+
+  - name: "Office Cover Group"
+    unique_id: office_cover_group
+    device_class: opening
+    state: >
+              {% set DOMAIN = 'cover' %}
+              {% set STATUS = 'on' %}
+              {% set ENTITY_ID = 'all_cover' %}
+              {% set AREA = 'Office' %}
+              {{ states.binary_sensor  | selectattr('attributes.device_class', '==', DOMAIN) | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count >0 }}
+
+
+sensor:
+  - name: "Office Lights On"
+    unique_id: office_lights_on
+    state: >
+          {% set DOMAIN = 'light' %}
+          {% set STATUS = 'on' %}
+          {% set ENTITY_ID = 'all_lights' %}
+          {% set AREA = 'Office' %}
+          {{ states[DOMAIN] | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count }}
+  - name: "Office Lights All"
+    unique_id: office_lights_all
+    state: >
+          {% set DOMAIN = 'light' %}
+          {% set STATUS = 'on,off' %}
+          {% set ENTITY_ID = 'all_lights' %}
+          {% set AREA = 'Office' %}
+          {{ states[DOMAIN] | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count }}
+
+  - name: "Office Switches On"
+    unique_id: office_switches_on
+    state: >
+          {% set DOMAIN = 'switch' %}
+          {% set STATUS = 'on' %}
+          {% set ENTITY_ID = 'all_switches' %}
+          {% set AREA = 'Office' %}
+          {% set ENTITY_ID2 = '_pre_release' %}
+          {% set ENTITY_ID3 = 'child_lock' %}
+          {{ states[DOMAIN] | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |rejectattr('entity_id', 'search', ENTITY_ID2) |rejectattr('entity_id', 'search', ENTITY_ID3) |map(attribute='entity_id')|list|count }}
+  
+  - name: "Office Switches All"
+    unique_id: office_switches_all
+    state: >
+          {% set DOMAIN = 'switch' %}
+          {% set STATUS = 'on,off' %}
+          {% set ENTITY_ID = 'all_switches' %}
+          {% set AREA = 'Office' %}
+          {% set ENTITY_ID2 = '_pre_release' %}
+          {% set ENTITY_ID3 = 'child_lock' %}
+          {{ states[DOMAIN] | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |rejectattr('entity_id', 'search', ENTITY_ID2) |rejectattr('entity_id', 'search', ENTITY_ID3) |map(attribute='entity_id')|list|count }}
+
+  - name: "Office Blinds Open"
+    unique_id: office_blinds_on
+    state: >
+          {% set DOMAIN = 'shade' %}
+          {% set STATUS = 'open' %}
+          {% set ENTITY_ID = 'all_blinds' %}
+          {% set AREA = 'Office' %}
+          {{ states[DOMAIN] | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count }}
+  - name: "Office Blinds All"
+    unique_id: office_blinds_all
+    state: >
+          {% set DOMAIN = 'shade' %}
+          {% set STATUS = 'open,closed' %}
+          {% set ENTITY_ID = 'all_blinds' %}
+          {% set AREA = 'Office' %}
+          {{ states[DOMAIN] | selectattr('state','in',STATUS) | selectattr('entity_id','in',area_entities(AREA)) |rejectattr('entity_id', 'is_hidden_entity') |rejectattr('entity_id', 'search', ENTITY_ID) |map(attribute='entity_id')|list|count }}
+
+  - name: "Office Avg Temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+    unique_id: office_avg_temperature
+    state: >
+        {% set AREA = 'Office' %}
+        {% set ENTITY_ID = 'device_temperature' %}
+        {{ expand([area_entities(AREA)])| selectattr('attributes.device_class', 'defined')| rejectattr('entity_id', 'search', ENTITY_ID)| rejectattr('entity_id', 'is_hidden_entity')| rejectattr('state', 'in', ['unavailable', 'unknown', '0.0'])| selectattr('attributes.device_class', '==', 'temperature')| map(attribute='state') | map('float', 0)| average | round(2 , 0)}}
+
+  - name: "Office Avg Humidity"
+    unit_of_measurement: "%"
+    device_class: humidity
+    unique_id: office_avg_humidity
+    state: >
+        {% set AREA = 'Office' %}
+        {{ expand([area_entities(AREA)])| selectattr('attributes.device_class', 'defined')| rejectattr('entity_id', 'is_hidden_entity')| rejectattr('state', 'in', ['unavailable', 'unknown', '0.0'])| selectattr('attributes.device_class', '==', 'humidity')| map(attribute='state') | map('float', 0)| average | round(2 , 0)}}
+
+  - name: "Office Avg illuminance"
+    unit_of_measurement: lx
+    device_class: illuminance
+    unique_id: office_avg_illuminance
+    state: >
+        {% set AREA = 'Office' %}
+        {{ expand([area_entities(AREA)])| selectattr('attributes.device_class', 'defined')| rejectattr('entity_id', 'is_hidden_entity')| rejectattr('state', 'in', ['unavailable', 'unknown'])| selectattr('attributes.device_class', '==', 'illuminance')| map(attribute='state') | map('float', 0)| average | round(2 , 0)}}
+
